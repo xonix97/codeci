@@ -82,6 +82,7 @@ codeci/
 ## 3. Feature scope (v1)
 
 - Search across sources with unified result list (source badge, duration, bitrate, cover)
+- **Popular-first search UX** (user requirement): default sources order = mainstream (Netease/QQ/Kuwo sidecar) for desktop; search results sorted by `raw_data.search.pop`/score where available; on Android, Jamendo exposes "charts/popular" endpoint used for the Home/ForYou rail; UI shows artist popularity where the source provides it. No random/niche results injected by the app itself
 - Stream & play: HTML `<audio>` via `/stream` proxy (desktop: backend proxy or local file; android: resolved direct URL; fallback download-then-play)
 - Download to disk (chosen folder, resume, progress, cancel) + offline library
 - Playlist import from URL (desktop sidecar mode: `musicdl.parseplaylist`; CC sources: native playlist endpoints where available)
@@ -96,7 +97,7 @@ codeci/
 
 ## 4. Phases & acceptance criteria
 
-- **Phase 0 — Scaffold (done-definition):** git init, `gh repo create codeci --public`, CI skeleton, `.gitignore`, LICENSE, **musicdl probe**: venv, `pip install musicdl==2.14.x`, run one search + one download with `MiguMusicClient`/`NeteaseMusicClient`, dump `song_infos` schema → record in `docs/musicdl-schema.md`. **Gate: if musicdl install/search fails on this machine, stop and report before building further.**
+- **Phase 0 — Scaffold (✅ DONE 2026-11-13):** repo created (`xonix97/codeci`, public), LICENSE/.gitignore/README, CI skeleton pending, `docs/musicdl-schema.md` records probe. musicdl 2.14.2 on Python 3.11.9 works: Jamendo CC search ✅, Netease mainstream search ✅ (real Kanye West lossless FLACs, inline LRC lyrics, `download_url_status.ok=True`). SAC initially blocked `Cryptodome.*` DLLs; user disabled SAC; backend will still ship an optional `CODECI_CRYPTODOME_SHIM=auto` fallback. **Gate passed.**
 - **Phase 1 — `codeci-core`:** models, SQLite migrations, download manager, Jamendo + FMA clients (unit tests), lyrics trait + stubs. Acceptance: `cargo test` green; can search Jamendo and download an mp3 to temp dir from a tiny Rust CLI harness.
 - **Phase 2 — sidecar backend:** FastAPI wrapper + PyInstaller build + systemd unit + PKGBUILD; integration test: spawn backend, hit `/health`, `/search?q=yoasobi&sources=NeteaseMusicClient`, stream proxy serves bytes.
 - **Phase 3 — frontend:** design system, both themes, all pages/components, zustand stores, mocked + real API layer (typed), settings page with theme switch persisted.
@@ -120,7 +121,10 @@ codeci/
 3. Tauri sidecar bundling quirks on Windows (paths, AV false positives) → document; sign later; keep backend importable via `codes-install-backend` script as fallback.
 4. CachyOS packaging drift → ship PKGBUILD + systemd unit; app works with user-installed backend too.
 5. Public repo + musicdl pinning → add SECURITY note; dependabot for Rust/npm only, not musicdl pinned range.
-6. android : audio in webview requires media permissions — handled in tauri android config.
+5. Mobile CC catalog is indie-heavy (probe: "kanye west" on Jamendo → type beats only, no Kanye releases). Accept & disclose in-app ("Android build ships open/CC catalog; desktop sidecar unlocks mainstream sources"). Popular-artist CC content comes from Jamendo trending + Wikimedia Commons (classical) + ccMixter remixes of famous songs
+6. Android : audio in webview requires media permissions — handled in tauri android config
+7. Windows Application Control / Smart App Control can block `pycryptodome*` native DLLs → document workaround (SAC off or `CODECI_CRYPTODOME_SHIM=auto` fallback aliasing `Cryptodome→Crypto`) in docs/installation
+8. musicdl signed URLs expire (~30 min) — stream proxy caches resolved URL per track id + re-resolves on failure.
 
 ## 7. Screenshots for README (required)
 
