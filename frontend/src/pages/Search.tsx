@@ -97,6 +97,13 @@ export function SearchPage() {
             ))}
           </div>
 
+          {/* Slow-source warning */}
+          {enabled.includes("YouTubeMusicClient") && (
+            <div className="mb-3 px-4 py-2 rounded-xl text-[12px] font-semibold" style={{ background: "color-mix(in srgb, var(--danger) 16%, transparent)", color: "var(--danger)", border: "1px solid color-mix(in srgb, var(--danger) 40%, transparent)" }}>
+              YouTube search takes ~3 minutes and usually returns 0 results on this network. Disable it in Settings → Music sources, or expect a long wait.
+            </div>
+          )}
+
           {/* Status line */}
           <div className="h-5 mb-1 px-1 text-[12px]" style={{ color: "var(--text-dim)" }}>
             {loading ? <span className="inline-flex items-center gap-1.5"><Loader2 size={12} className="animate-spin" /> Searching {enabled.map(sourceLabel).join(", ") || "sources"}…</span>

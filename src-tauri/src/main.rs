@@ -3,3 +3,5 @@
 fn main() {
     codeci_app_lib::run()
 }
+
+// touch: force tauri dev respawn

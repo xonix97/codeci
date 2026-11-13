@@ -56,16 +56,22 @@ export const useSettings = create<SettingsState>()(
     }),
     {
       name: "codeci-settings",
-      version: 2,
+      version: 3,
       migrate: (persisted) => {
         // v2: NetEase-only default (Migu is unreachable/slow on intl networks).
         // Factory-default sessions migrate to the fast default; custom source
         // selections are kept untouched.
+        // v3: drop YouTubeMusicClient from persisted enabled lists — it never
+        // returns within interactive latency there and leaves the UI on
+        // "Searching YouTube…" forever. Re-enable explicitly if you want to wait it out.
         const state = (persisted ?? {}) as Record<string, unknown>;
         const factoryV1 = ["NeteaseMusicClient", "MiguMusicClient", "QQMusicClient", "KuwoMusicClient"];
-        const cur = state.enabledSources;
-        if (!Array.isArray(cur) || (cur.length === factoryV1.length && factoryV1.every((s) => (cur as string[]).includes(s)))) {
+        const cur = Array.isArray(state.enabledSources) ? (state.enabledSources as string[]) : null;
+        if (!cur || (cur.length === factoryV1.length && factoryV1.every((s) => cur.includes(s)))) {
           state.enabledSources = ["NeteaseMusicClient"];
+        } else {
+          const filtered = cur.filter((s) => s !== "YouTubeMusicClient");
+          state.enabledSources = filtered.length ? filtered : ["NeteaseMusicClient"];
         }
         return state as unknown as SettingsState;
       },
