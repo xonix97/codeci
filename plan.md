@@ -86,6 +86,14 @@ codeci/
 - Stream & play: HTML `<audio>` via `/stream` proxy (desktop: backend proxy or local file; android: resolved direct URL; fallback download-then-play)
 - Download to disk (chosen folder, resume, progress, cancel) + offline library
 - Playlist import from URL (desktop sidecar mode: `musicdl.parseplaylist`; CC sources: native playlist endpoints where available)
+- **Recommendations ("Spotify-style", local)** — phase 1 `codeci-core::recs`, phase 3 Home rails:
+  - Taste profile: exponential time-decay (half-life 30 d) weighted vectors over artists, genres/tags, source popularity, built from plays/skips/completions/likes
+  - Co-play matrix: track×track co-occurrence across sessions → "Because you played X"
+  - Candidate gen: same-artist, same-genre cosine neighbors, source popularity lists (Jamendo trending, Netease `pop`) as exploration pool
+  - Ranking: `0.45·genre_cos_sim + 0.25·artist_affinity + 0.20·popularity_prior + 0.10·novelty_bonus − skip_penalty`; ε-greedy (ε≈0.2) explore/exploit
+  - Queue-aware **radio mode**: station from current track (artist/genre match, dedup, popularity boost)
+  - Fully local (SQLite), single-user — no collaborative filtering across users, no audio DSP in v1 (documented); "reset taste profile" in settings
+  - Home rails: `For You` (top-k by score), `Because You Played` (co-play), `Top Artists → radio`, `Trending` (source charts)
 - Library: favorites, history, play counts, search/filter/sort
 - Playlists: create/rename/delete, add/remove/reorder tracks, cover collage
 - Queue: now playing view, up-next, reorder, shuffle/repeat
@@ -98,7 +106,7 @@ codeci/
 ## 4. Phases & acceptance criteria
 
 - **Phase 0 — Scaffold (✅ DONE 2026-11-13):** repo created (`xonix97/codeci`, public), LICENSE/.gitignore/README, CI skeleton pending, `docs/musicdl-schema.md` records probe. musicdl 2.14.2 on Python 3.11.9 works: Jamendo CC search ✅, Netease mainstream search ✅ (real Kanye West lossless FLACs, inline LRC lyrics, `download_url_status.ok=True`). SAC initially blocked `Cryptodome.*` DLLs; user disabled SAC; backend will still ship an optional `CODECI_CRYPTODOME_SHIM=auto` fallback. **Gate passed.**
-- **Phase 1 — `codeci-core`:** models, SQLite migrations, download manager, Jamendo + FMA clients (unit tests), lyrics trait + stubs. Acceptance: `cargo test` green; can search Jamendo and download an mp3 to temp dir from a tiny Rust CLI harness.
+- **Phase 1 — `codeci-core`:** models, SQLite migrations, download manager, Jamendo + Audius (no-key) + Wikimedia Commons clients (FMA/ccMixter keys configurable), recs engine (`taste.rs`, `coplay.rs`, `rank.rs`) with fixture-based unit tests, lyrics trait. Acceptance: `cargo test` green; CLI harness can search Audius and produce a `For You` rail from synthetic history.
 - **Phase 2 — sidecar backend:** FastAPI wrapper + PyInstaller build + systemd unit + PKGBUILD; integration test: spawn backend, hit `/health`, `/search?q=yoasobi&sources=NeteaseMusicClient`, stream proxy serves bytes.
 - **Phase 3 — frontend:** design system, both themes, all pages/components, zustand stores, mocked + real API layer (typed), settings page with theme switch persisted.
   - **Phase 3 design polish:** glass & material both shippable; reduce motion respected; Android perf check.
