@@ -21,9 +21,10 @@ export function HomePage({ onGoSearch }: { onGoSearch: () => void }) {
           <div className="text-[11px] uppercase tracking-[0.18em]" style={{ color: "var(--accent)" }}>Good evening</div>
           <h1 className="text-[34px] font-extrabold tracking-tight leading-tight">Sound, sorted.</h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button className="chip" data-active={theme === "spotify"} onClick={() => set({ theme: "spotify" })}>Spotify</button>
           <button className="chip" data-active={theme === "liquid"} onClick={() => set({ theme: "liquid" })}>Liquid Glass</button>
-          <button className="chip" data-active={theme === "pixelos"} onClick={() => set({ theme: "pixelos" })}>PixelOS Material</button>
+          <button className="chip" data-active={theme === "pixelos"} onClick={() => set({ theme: "pixelos" })}>PixelOS</button>
         </div>
       </header>
 

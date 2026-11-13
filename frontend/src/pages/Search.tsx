@@ -17,7 +17,7 @@ import { AlbumCard } from "../components/AlbumCard";
 import { useSettings } from "../stores/settings";
 import type { Album, Artist, Track } from "../types";
 
-const SOURCE_CHIPS = [...DEFAULT_SOURCES, "QianqianMusicClient", "JamendoMusicClient", "KugouMusicClient"];
+const SOURCE_CHIPS = [...DEFAULT_SOURCES, "QQMusicClient", "MiguMusicClient", "QianqianMusicClient", "SpotifyMusicClient", "JamendoMusicClient", "KugouMusicClient"];
 type Tab = "songs" | "artists" | "albums";
 const TABS: { id: Tab; label: string }[] = [
   { id: "songs", label: "Songs" },

@@ -23,7 +23,7 @@ async function invokeCmd<T>(cmd: string, args?: Record<string, unknown>): Promis
 
 /* ---------------- sources / search ---------------- */
 
-export const DEFAULT_SOURCES = ["NeteaseMusicClient", "KuwoMusicClient"];
+export const DEFAULT_SOURCES = ["JioSaavnMusicClient", "NeteaseMusicClient"];
 
 export const SOURCE_LABEL: Record<string, string> = {
   NeteaseMusicClient: "NetEase",
@@ -34,6 +34,11 @@ export const SOURCE_LABEL: Record<string, string> = {
   JamendoMusicClient: "Jamendo",
   KugouMusicClient: "KuGou",
   YouTubeMusicClient: "YouTube",
+  SpotifyMusicClient: "Spotify",
+  JioSaavnMusicClient: "JioSaavn",
+  QobuzMusicClient: "Qobuz",
+  TIDALMusicClient: "TIDAL",
+  FMAMusicClient: "FMA",
   audiusmusicclient: "Audius",
   audius: "Audius",
   jamendo: "Jamendo",

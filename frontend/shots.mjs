@@ -20,7 +20,7 @@ await page.waitForFunction(() => {
   return imgs.filter((i) => i.complete && i.naturalWidth > 0).length >= 5;
 }, { timeout: 60000 }).catch(() => {});
 await page.waitForTimeout(1200);
-await page.screenshot({ path: `${OUT}/hero-liquid-glass.jpg`, ...opts });
+await page.screenshot({ path: `${OUT}/hero-spotify.jpg`, ...opts });
 
 // 2) Search — NetEase only (fast, real famous music results)
 await page.getByText('Search', { exact: true }).first().click();
@@ -40,7 +40,7 @@ await page.screenshot({ path: `${OUT}/now-playing-liquid.jpg`, ...opts });
 // 4) PixelOS Material — home
 await page.getByText('Home', { exact: true }).first().click();
 await page.waitForTimeout(700);
-await page.getByText('PixelOS Material', { exact: true }).first().click();
+await page.getByText('PixelOS', { exact: true }).first().click();
 await page.waitForTimeout(900);
 await page.screenshot({ path: `${OUT}/pixelos-material.jpg`, ...opts });
 

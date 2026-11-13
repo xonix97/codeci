@@ -7,25 +7,28 @@ import {
   Radio,
   ChevronRight,
 } from "lucide-react";
-import { ACCENTS_LIQUID, ACCENTS_PIXELOS, useSettings } from "../stores/settings";
+import { ACCENTS_LIQUID, ACCENTS_PIXELOS, ACCENTS_SPOTIFY, useSettings } from "../stores/settings";
 
 const SOURCE_OPTIONS: { slug: string; label: string; note?: string }[] = [
   { slug: "NeteaseMusicClient", label: "NetEase (China)" },
+  { slug: "JioSaavnMusicClient", label: "JioSaavn (free · India+English · 320kbps)", note: "~8s — fastest famous-catalog source on this network" },
   { slug: "QQMusicClient", label: "QQ Music (China)" },
   { slug: "KuwoMusicClient", label: "Kuwo", note: "~40s · verified famous catalog on intl networks" },
   { slug: "MiguMusicClient", label: "Migu (China)" },
   { slug: "QianqianMusicClient", label: "QianQian (China)" },
   { slug: "KugouMusicClient", label: "KuGou (China)" },
+  { slug: "SpotifyMusicClient", label: "Spotify", note: "Real catalog, but ~80s on this network" },
+  { slug: "QobuzMusicClient", label: "Qobuz", note: "Needs your Qobuz login cookie + a subscription" },
+  { slug: "TIDALMusicClient", label: "TIDAL", note: "Needs your Tidal login + ffmpeg + N_m3u8DL-RE" },
   { slug: "YouTubeMusicClient", label: "YouTube Music", note: "~3 min per search (ytmusicapi) — leave off for everyday use" },
-  { slug: "JamendoMusicClient", label: "Jamendo (CC, needs free client_id)" },
+  { slug: "JamendoMusicClient", label: "Jamendo (CC)" },
   { slug: "FMAMusicClient", label: "Free Music Archive (CC)" },
   { slug: "AudiusMusicClient", label: "Audius (no key)" },
 ];
 
 export function SettingsPage() {
   const s = useSettings();
-  const isLiquid = s.theme === "liquid";
-  const accents = isLiquid ? ACCENTS_LIQUID : ACCENTS_PIXELOS;
+  const accents = s.theme === "pixelos" ? ACCENTS_PIXELOS : s.theme === "spotify" ? ACCENTS_SPOTIFY : ACCENTS_LIQUID;
 
   return (
     <div className="max-w-[860px]">
@@ -33,8 +36,20 @@ export function SettingsPage() {
 
       {/* Theme */}
       <SettingsGroup title="Appearance" icon={<Palette size={16} />}>
-        <div className="grid grid-cols-2 gap-3 mb-1">
-          <button className="theme-tile" data-active={isLiquid} onClick={() => s.set({ theme: "liquid" })}>
+        <div className="grid grid-cols-3 gap-3 mb-1">
+          <button className="theme-tile" data-active={s.theme === "spotify"} onClick={() => s.set({ theme: "spotify" })}>
+            <div className="h-24 p-2.5" style={{ background: "#121212" }}>
+              <div className="h-9 rounded-lg p-2" style={{ background: "#181818" }}>
+                <div className="h-3 w-14 rounded-full" style={{ background: "#1DB954" }} />
+                <div className="mt-1.5 h-2 w-24 rounded-full" style={{ background: "#3a3a3a" }} />
+              </div>
+              <div className="mt-1.5 flex gap-1.5">
+                {[0, 1, 2].map((i) => <div key={i} className="h-5 flex-1 rounded-md" style={{ background: "#242424" }} />)}
+              </div>
+            </div>
+            <div className="px-3 py-2 text-[12px] font-bold text-left" style={{ background: "var(--panel-solid)" }}>Spotify</div>
+          </button>
+          <button className="theme-tile" data-active={s.theme === "liquid"} onClick={() => s.set({ theme: "liquid" })}>
             <div className="h-24 p-2.5" style={{ background: "#0d0f18" }}>
               <div className="h-9 rounded-xl p-2" style={{ background: "#161828" }}>
                 <div className="h-3 w-14 rounded-full" style={{ background: "#8f7bff" }} />
@@ -46,7 +61,7 @@ export function SettingsPage() {
             </div>
             <div className="px-3 py-2 text-[12px] font-bold text-left" style={{ background: "var(--panel-solid)" }}>Liquid Glass</div>
           </button>
-          <button className="theme-tile" data-active={!isLiquid} onClick={() => s.set({ theme: "pixelos" })}>
+          <button className="theme-tile" data-active={s.theme === "pixelos"} onClick={() => s.set({ theme: "pixelos" })}>
             <div className="h-24 p-2.5" style={{ background: "#f3edf7" }}>
               <div className="h-9 rounded-2xl p-2" style={{ background: "#e6e0e9" }}>
                 <div className="h-3 w-14 rounded-full" style={{ background: "#6750a4" }} />
@@ -66,7 +81,7 @@ export function SettingsPage() {
             ))}
           </div>
         </SettingRow>
-        {isLiquid && (
+        {s.theme === "liquid" && (
           <SettingRow label="Glass intensity" hint="Blur behind panels">
             <div className="flex gap-2">
               {(["low", "medium", "high"] as const).map((g) => (
@@ -75,7 +90,7 @@ export function SettingsPage() {
             </div>
           </SettingRow>
         )}
-        {!isLiquid && (
+        {s.theme === "pixelos" && (
           <SettingRow label="Dark tonal" hint="PixelOS dark surface">
             <Toggle on={s.pixelosDark} onChange={(v) => s.set({ pixelosDark: v })} />
           </SettingRow>
@@ -83,8 +98,8 @@ export function SettingsPage() {
       </SettingsGroup>
 
       {/* Sources */}
-      <SettingsGroup title="Music sources" icon={<Radio size={16} />}>
-        <p className="text-[12px] px-1 pb-2" style={{ color: "var(--text-dim)" }}>Enabled sources are queried in parallel. Fewer sources = faster, more reliable search.</p>
+      <SettingsGroup title="Add-on sources" icon={<Radio size={16} />}>
+        <p className="text-[12px] px-1 pb-2" style={{ color: "var(--text-dim)" }}>Default catalogs are <b>JioSaavn + NetEase</b> (fastest famous catalogs on intl networks). Everything below is opt-in. More sources = slower merge.</p>
         {SOURCE_OPTIONS.map(({ slug, label, note }) => (
           <SettingRow key={slug} label={label} hint={note ?? slug.replace(/MusicClient$/, "")}>
             <Toggle on={s.enabledSources.includes(slug)} onChange={() => s.toggleSource(slug)} />
@@ -140,7 +155,8 @@ const ACCENT_HEX: Record<string, string> = {
   crimson: "#ff5d73",
   peach: "#8a5450",
   teal: "#006a6a",
-  green: "#386a20",
+  green: "#1DB954",
+  white: "#f5f5f5",
 };
 
 function SettingsGroup({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {

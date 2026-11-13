@@ -1,11 +1,11 @@
 # codeci
 
-> **codec** as in *music, got it*. A music app for Windows, CachyOS Linux and Android, built on [musicdl](https://github.com/CharlesPikachu/musicdl) — search the mainstream catalogs (NetEase, QQ, Kuwo, Migu…) or the open/CC catalog on-device, stream, download and organize it, with two themes: **Liquid Glass** and **PixelOS Material**.
+> **codec** as in *music, got it*. A music app for Windows, CachyOS Linux and Android, built on [musicdl](https://github.com/CharlesPikachu/musicdl) — search the mainstream catalogs (NetEase, QQ, Kuwo, JioSaavn…) or the open/CC catalog on-device, stream, download and organize it, with three themes: **Spotify** (default), **Liquid Glass** and **PixelOS Material**.
 
 [![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20Noncommercial-blue.svg)](LICENSE)
 [![Status: early development](https://img.shields.io/badge/status-early%20dev-orange.svg)]()
 
-![codeci hero](docs/screenshots/hero-liquid-glass.jpg)
+![codeci — Spotify theme](docs/screenshots/hero-spotify.jpg)
 
 ---
 
@@ -16,7 +16,7 @@ The desktop experience (<kbd>Windows</kbd> + <kbd>CachyOS</kbd>) gets the **full
 | Feature | Desktop | Android APK |
 |---|---|---|
 | Mainstream sources (NetEase/QQ/Kuwo/Migu…) | ✅ via sidecar | via external backend (Termux), post-v1 |
-| Open/CC sources on-device (Audius, Wikimedia…) | ✅ | ✅ |
+| Default catalog | JioSaavn + NetEase — best speed-to-famous ratio (8 s / ~23 s) | Audius / CC sources |
 | Search / stream / download | ✅ | ✅ (open catalog) |
 | Playlist URL import | ✅ | planned |
 | Offline library, playlists, likes, history | ✅ (SQLite) | ✅ (SQLite, rusqlite) |
@@ -28,9 +28,11 @@ The desktop experience (<kbd>Windows</kbd> + <kbd>CachyOS</kbd>) gets the **full
 
 ## Screenshots
 
-| Liquid Glass (home + search) | Now Playing — live queue |
+| Spotify (home + search) | Now Playing — live queue |
 |---|---|
 | ![Search Kanye West on NetEase](docs/screenshots/search-kanye.jpg) | ![Now Playing](docs/screenshots/now-playing-liquid.jpg) |
+| Artists tab | Albums tab |
+| ![Artists](docs/screenshots/artists-tab.jpg) | ![Albums](docs/screenshots/albums-tab.jpg) |
 
 | PixelOS Material | Settings — themes |
 |---|---|
@@ -47,6 +49,13 @@ musicdl resolves download URLs + probes them per result, so search is not instan
 - Backend runs sources **in parallel with a 45 s per-source cap** — slow sources are dropped, never blocking fast ones
 - Default sources = **NetEase only**; QQ/Kuwo/Migu/YouTube remain toggles in Settings (YouTube note says ~3 min — don't enable casually)
 - CachyOS (CN users): all five mainland sources are fast — re-enable them in Settings
+
+## Search — three tabs, not one pile
+
+- **Songs** — progressive: instant Audius matches land in ~4 s, official NetEase/Kuwo catalog merges in below (mixed correctly, deduped)
+- **Artists** — NetEase artists (avatar, track & album counts; "ye" → Kanye West, 1,736 tracks, 102 albums) + Audius verified artists
+- **Albums** — the famous NetEase album wall (The Life of Pablo, MBDTF, The College Dropout, BULLY…) + Audius albums
+- Click any artist/album → jump to its songs in the Songs tab
 
 ## Quick start
 
