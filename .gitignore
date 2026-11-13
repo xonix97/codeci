@@ -1,0 +1,38 @@
+# Rust / Tauri
+/core/target
+/src-tauri/target
+/src-tauri/gen/android/app/build
+/src-tauri/gen/android/build
+**/target/
+**/*.rs.bk
+Cargo.lock
+
+# Node / frontend
+node_modules/
+dist/
+.vite/
+*.local
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+backend/build/
+backend/dist/
+*.spec
+
+# Sidecar binaries (large, built artifacts)
+/src-tauri/binaries/
+
+# Screenshots are checked in (docs/screenshots), other media not
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Env / secrets
+.env
+.env.*
+!.env.example

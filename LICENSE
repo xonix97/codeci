@@ -1,0 +1,51 @@
+PolyForm Noncommercial License 1.0.0
+
+Copyright (c) 2026 abhi (xonix97)
+
+This software is licensed under the PolyForm Noncommercial License 1.0.0.
+You may use, copy, modify, and distribute this software for noncommercial
+purposes only, subject to the terms below.
+
+=======================================================================
+
+Required notice
+
+  Copyright (c) 2026 abhi (xonix97)
+  codeci — https://github.com/xonix97/codeci
+  Based on musicdl by CharlesPikachu (https://github.com/CharlesPikachu/musicdl)
+
+=======================================================================
+
+The terms of the PolyForm Noncommercial License 1.0.0 apply. In summary:
+
+  1. License Grant. The licensor grants you a copyright license to use,
+     modify and distribute the software, and to use, modify and distribute
+     whether the software is used or deployed for personal use or for
+     commercial purposes ONLY IF the use is noncommercial.
+
+  2. Noncommercial Use. Noncommercial use means any use other than business
+     use. You may not use the software for commercial purposes, including
+     but not limited to: selling the software or services based on it,
+     using it in connection with a commercial service, or providing it as
+     part of a product or service that is ordinarily provided for a fee.
+
+  3. No Warranty. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
+     ANY KIND, AND THE LICENSOR DISCLAIMS ALL WARRANTIES, INCLUDING THE
+     WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+     NONINFRINGEMENT.
+
+  4. Limitation of Liability. IN NO EVENT SHALL THE LICENSOR BE LIABLE
+     FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+     CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+     WITH THIS SOFTWARE OR ITS USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+  5. Termination. The license granted above terminates automatically if
+     you breach its terms.
+
+The full, authoritative text of the PolyForm Noncommercial License 1.0.0
+is available at: https://polyformproject.org/licenses/noncommercial/1.0.0
+
+musicdl (https://github.com/CharlesPikachu/musicdl), the upstream library
+this project depends on, is also distributed under the PolyForm
+Noncommercial License 1.0.0. Accordingly, this project may only be used
+for noncommercial purposes.
