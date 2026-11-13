@@ -16,7 +16,7 @@ const SOURCE_OPTIONS: { slug: string; label: string; note?: string }[] = [
   { slug: "MiguMusicClient", label: "Migu (China)" },
   { slug: "QianqianMusicClient", label: "QianQian (China)" },
   { slug: "KugouMusicClient", label: "KuGou (China)" },
-  { slug: "YouTubeMusicClient", label: "YouTube Music (needs Node.js)" },
+  { slug: "YouTubeMusicClient", label: "YouTube Music", note: "~3 min per search (ytmusicapi) — leave off for everyday use" },
   { slug: "JamendoMusicClient", label: "Jamendo (CC, needs free client_id)" },
   { slug: "FMAMusicClient", label: "Free Music Archive (CC)" },
   { slug: "AudiusMusicClient", label: "Audius (no key)" },
@@ -35,18 +35,26 @@ export function SettingsPage() {
       <SettingsGroup title="Appearance" icon={<Palette size={16} />}>
         <div className="grid grid-cols-2 gap-3 mb-1">
           <button className="theme-tile" data-active={isLiquid} onClick={() => s.set({ theme: "liquid" })}>
-            <div className="h-24 p-2.5" style={{ background: "radial-gradient(600px 200px at 20% 0%, rgba(143,123,255,.55), transparent), #0d0f18" }}>
-              <div className="h-3 w-16 rounded-full" style={{ background: "#8f7bff" }} />
-              <div className="mt-2 h-2 w-28 rounded-full" style={{ background: "rgba(255,255,255,.25)" }} />
-              <div className="mt-1.5 h-2 w-20 rounded-full" style={{ background: "rgba(255,255,255,.18)" }} />
+            <div className="h-24 p-2.5" style={{ background: "#0d0f18" }}>
+              <div className="h-9 rounded-xl p-2" style={{ background: "#161828" }}>
+                <div className="h-3 w-14 rounded-full" style={{ background: "#8f7bff" }} />
+                <div className="mt-1.5 h-2 w-24 rounded-full" style={{ background: "#2b2e44" }} />
+              </div>
+              <div className="mt-1.5 flex gap-1.5">
+                {[0, 1, 2].map((i) => <div key={i} className="h-5 flex-1 rounded-md" style={{ background: "#161828" }} />)}
+              </div>
             </div>
             <div className="px-3 py-2 text-[12px] font-bold text-left" style={{ background: "var(--panel-solid)" }}>Liquid Glass</div>
           </button>
           <button className="theme-tile" data-active={!isLiquid} onClick={() => s.set({ theme: "pixelos" })}>
-            <div className="h-24 p-2.5" style={{ background: "linear-gradient(180deg, #f3edf7 0 55%, #efe9f4 55% 100%)" }}>
-              <div className="rounded-2xl p-2" style={{ background: "#6750a4", width: 64, height: 12 }} />
-              <div className="mt-2 h-2.5 w-28 rounded-full" style={{ background: "#1c1b1f", opacity: .3 }} />
-              <div className="mt-1.5 h-2.5 w-20 rounded-full" style={{ background: "#1c1b1f", opacity: .25 }} />
+            <div className="h-24 p-2.5" style={{ background: "#f3edf7" }}>
+              <div className="h-9 rounded-2xl p-2" style={{ background: "#e6e0e9" }}>
+                <div className="h-3 w-14 rounded-full" style={{ background: "#6750a4" }} />
+                <div className="mt-1.5 h-2 w-24 rounded-full" style={{ background: "#c9c3d0" }} />
+              </div>
+              <div className="mt-1.5 flex gap-1.5">
+                {[0, 1, 2].map((i) => <div key={i} className="h-5 flex-1 rounded-xl" style={{ background: "#e6e0e9" }} />)}
+              </div>
             </div>
             <div className="px-3 py-2 text-[12px] font-bold text-left" style={{ background: "var(--panel-solid)" }}>PixelOS Material</div>
           </button>

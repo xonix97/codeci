@@ -33,7 +33,7 @@ export const useSettings = create<SettingsState>()(
       glass: "medium",
       pixelosDark: false,
       onboardingDone: false,
-      enabledSources: ["NeteaseMusicClient", "MiguMusicClient", "QQMusicClient", "KuwoMusicClient"],
+      enabledSources: ["NeteaseMusicClient"],
       jamendoClientId: "",
       downloadDir: "",
       backendUrl: "http://127.0.0.1:8787",
@@ -54,7 +54,22 @@ export const useSettings = create<SettingsState>()(
         localStorage.removeItem("codeci-recs-seed");
       },
     }),
-    { name: "codeci-settings" },
+    {
+      name: "codeci-settings",
+      version: 2,
+      migrate: (persisted) => {
+        // v2: NetEase-only default (Migu is unreachable/slow on intl networks).
+        // Factory-default sessions migrate to the fast default; custom source
+        // selections are kept untouched.
+        const state = (persisted ?? {}) as Record<string, unknown>;
+        const factoryV1 = ["NeteaseMusicClient", "MiguMusicClient", "QQMusicClient", "KuwoMusicClient"];
+        const cur = state.enabledSources;
+        if (!Array.isArray(cur) || (cur.length === factoryV1.length && factoryV1.every((s) => (cur as string[]).includes(s)))) {
+          state.enabledSources = ["NeteaseMusicClient"];
+        }
+        return state as unknown as SettingsState;
+      },
+    },
   ),
 );
 

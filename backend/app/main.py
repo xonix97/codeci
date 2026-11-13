@@ -3,7 +3,7 @@
 Endpoints:
   GET  /health              -> liveness + version
   GET  /sources             -> registered musicdl source slugs
-  GET  /search?q=&sources=&limit=   -> unified track list (JSON)
+  GET  /search?q=&sources=&limit=   -> unified track list (JSON; 10-min TTL cache)
   GET  /lyrics?source=&source_id=   -> cached LRC from last search (404 if none)
   GET  /playlist/parse?url=&source= -> tracks from a playlist URL (sidecar mode)
   POST /download            -> download a track via musicdl (body: track dict + work_dir + cookies)
@@ -11,6 +11,12 @@ Endpoints:
 
 Auth: when CODECI_BACKEND_TOKEN is set, every request must send X-Codeci-Token.
 When unset, the server binds to 127.0.0.1 and CORS allows localhost/tauri origins only.
+
+Search strategy: sources run in PARALLEL with per-source isolation — one slow/broken
+source (e.g. YouTubeMusicClient, ~3 min for 5 results) can't take down the rest.
+Overall wall-clock cap: 45 s per source — a slow/unreachable source (e.g.
+MiguMusicClient on non-CN networks) is dropped rather than blocking search.
+Warm repeats are served from an in-process TTL cache.
 """
 from __future__ import annotations
 
@@ -18,7 +24,7 @@ import json
 import os
 import sys
 import threading
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, wait
 from typing import Optional
 
 import httpx
@@ -99,8 +105,12 @@ _pool = ThreadPoolExecutor(max_workers=4)
 # In-process caches shared across requests within this backend's lifetime.
 _song_info_cache: dict[tuple[str, str], object] = {}
 _artist_lock = threading.Lock()
+_search_cache: dict[tuple[str, tuple[str, ...], int], tuple[float, list[dict]]] = {}
 
-DEFAULT_SOURCES = ["MiguMusicClient", "NeteaseMusicClient", "QQMusicClient", "KuwoMusicClient", "QianqianMusicClient"]
+DEFAULT_SOURCES = ["NeteaseMusicClient"]
+SOURCE_TIMEOUT_S = 45  # per-source cap; slower sources (e.g. Migu on intl networks) get dropped
+CACHE_TTL_S = 600
+CACHE_MAX = 128
 
 
 @app.get("/health")
@@ -125,9 +135,14 @@ def _make_client(source_slugs: list[str], work_dir: Optional[str] = None, search
     return musicdl.MusicClient(music_sources=slugs, init_music_clients_cfg=cfg)
 
 
-def _search_sync(query: str, slugs: list[str], limit: int) -> list[dict]:
-    client = _make_client(slugs, search_size=limit)
-    raw = client.search(keyword=query)
+def _search_one(source: str, query: str, limit: int) -> list[dict]:
+    """Search a single source in isolation; failures return [] and log."""
+    try:
+        client = _make_client([source], search_size=limit)
+        raw = client.search(keyword=query)
+    except Exception as e:
+        print(f"[codeci-backend] source {source} failed: {e!r}")
+        return []
     out = []
     for src, infos in raw.items():
         for info in infos:
@@ -135,6 +150,35 @@ def _search_sync(query: str, slugs: list[str], limit: int) -> list[dict]:
                 _song_info_cache[(src, str(info.identifier))] = info
             out.append(song_info_to_track(info, src))
     return out
+
+
+def _search_sync(query: str, slugs: list[str], limit: int) -> list[dict]:
+    cache_key = (query.strip().lower(), tuple(sorted(slugs)), limit)
+    with _artist_lock:
+        hit = _search_cache.get(cache_key)
+        if hit and (__import__("time").time() - hit[0]) < CACHE_TTL_S:
+            return hit[1]
+
+    results: list[dict] = []
+    pool = ThreadPoolExecutor(max_workers=max(1, len(slugs)))
+    try:
+        futures = {pool.submit(_search_one, s, query, limit): s for s in slugs}
+        done, not_done = wait(futures, timeout=SOURCE_TIMEOUT_S)
+        for fut in done:
+            try:
+                results.extend(fut.result())
+            except Exception as e:
+                print(f"[codeci-backend] source {futures[fut]} raised: {e!r}")
+        for fut in not_done:
+            print(f"[codeci-backend] source {futures[fut]} timed out after {SOURCE_TIMEOUT_S}s — dropped")
+    finally:
+        pool.shutdown(wait=False, cancel_futures=True)
+
+    with _artist_lock:
+        if len(_search_cache) >= CACHE_MAX:
+            _search_cache.clear()
+        _search_cache[cache_key] = (__import__("time").time(), results)
+    return results
 
 
 @app.get("/search")

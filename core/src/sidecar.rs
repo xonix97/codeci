@@ -69,7 +69,7 @@ impl SidecarClient {
     pub fn new(base: impl Into<String>, token: Option<String>) -> Self {
         Self {
             http: Client::builder()
-                .timeout(std::time::Duration::from_secs(60))
+                .timeout(std::time::Duration::from_secs(120))
                 .user_agent("codeci-core/0.1")
                 .build()
                 .expect("sidecar http client"),

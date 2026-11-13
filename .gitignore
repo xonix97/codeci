@@ -35,3 +35,7 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# musicdl runtime outputs
+musicdl_outputs/
+

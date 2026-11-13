@@ -24,7 +24,7 @@ export function Sidebar({ active, onNavigate }: { active: NavTarget; onNavigate:
       <div className="flex items-center gap-2 px-2 pb-5 pt-1">
         <div
           className="grid place-items-center rounded-2xl"
-          style={{ width: 40, height: 40, background: "linear-gradient(140deg, var(--accent), color-mix(in srgb, var(--accent-2) 70%, transparent))", color: "var(--on-accent)", boxShadow: "var(--shadow-glow)" }}
+          style={{ width: 40, height: 40, background: "var(--accent)", color: "var(--on-accent)", boxShadow: "var(--shadow-glow)" }}
         >
           <Music2 size={20} strokeWidth={2.2} />
         </div>

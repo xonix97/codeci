@@ -38,6 +38,16 @@ The desktop experience (<kbd>Windows</kbd> + <kbd>CachyOS</kbd>) gets the **full
 
 ![Mobile layout (responsive preview)](docs/screenshots/mobile-responsive.jpg)
 
+### Windows performance notes (measured 2026-11-13)
+
+musicdl resolves download URLs + probes them per result, so search is not instant:
+
+- **NetEase ~20–40 s** on intl networks (VIP probes at 10 s timeouts per track); results are then cached 10 min (repeat search = ~40 ms)
+- **Migu/YouTube are effectively dead on this network**: Migu returns 0 tracks (>110 s of probes); YouTubeMusicClient needs ~176 s for 5 results
+- Backend runs sources **in parallel with a 45 s per-source cap** — slow sources are dropped, never blocking fast ones
+- Default sources = **NetEase only**; QQ/Kuwo/Migu/YouTube remain toggles in Settings (YouTube note says ~3 min — don't enable casually)
+- CachyOS (CN users): all five mainland sources are fast — re-enable them in Settings
+
 ## Quick start
 
 ### Prerequisites
