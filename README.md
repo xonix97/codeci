@@ -63,10 +63,19 @@ Note for Windows: if Smart App Control (SAC) blocks `pycryptodomeX` DLLs, either
 ```bash
 cd frontend
 npm install
-npm run dev          # http://localhost:1420, talks to the sidecar on :8787
+npm run dev          # http://localhost:1420 — talks to the sidecar on :8787
 ```
 
-`npm run build` produces the static bundle; `npm run tauri dev` (from `src-tauri/` once scaffolded) builds the desktop app.
+### 3. Desktop app (verified 2026-11-13)
+
+```powershell
+# from the repo root — the CLI lives in frontend/node_modules:
+.\frontend\node_modules\.bin\tauri.cmd dev
+```
+
+Opens the codeci window; the sidecar spawns itself on a free port (see `docs/android-setup.md` for why 8787 is the manual fallback), `library.db` lands in `%APPDATA%\dev.xonix97.codeci\`.
+
+`npm run build` in `frontend/` produces the static bundle used by the Tauri build.
 
 ### 3. Rust core (library, sources, recs)
 
@@ -110,7 +119,7 @@ codeci is **noncommercial** — [PolyForm Noncommercial 1.0.0](LICENSE), like it
 - [x] Phase 2 — `codeci-backend`: FastAPI wrapper (search/lyrics/playlist/download/streaming proxy with Range) + Windows PyInstaller script, CachyOS PKGBUILD + systemd user unit
 - [x] Phase 3 — Frontend MVP: both themes, Search (live), Now Playing + queue, Settings, Home rails (Audius trending live)
 - [ ] Phase 4 — Tauri desktop shell: sidecar lifecycle, tray, media keys, NSIS/MSI
-- [ ] Phase 5 — Android APK (on-device CC catalog)
+- [ ] Phase 5 — Android APK (on-device CC catalog; SDK install pending, see [docs/android-setup.md](docs/android-setup.md))
 - [ ] Phase 6 — Release pipeline + Termux backend guide
 
 ## Docs
