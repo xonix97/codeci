@@ -1,0 +1,34 @@
+# CachyOS / Arch packaging skeleton for codeci-backend (musicdl sidecar).
+# Install:  makepkg -si  (installs to /usr/lib/codeci-backend + /usr/bin/codeci-backend)
+pkgname=codeci-backend
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="musicdl sidecar backend for the codeci music app (PolyForm Noncommercial)"
+arch=('any')
+license=('LicenseRef-PolyForm-Noncommercial')
+depends=('python' 'python-pip' 'ffmpeg')
+makedepends=('python-installer' 'python-build' 'python-wheel' 'python-poetry' 'python-setuptools')
+source=("git+https://github.com/xonix97/codeci.git#tag=v${pkgver}")
+sha256sums=('SKIP')
+
+build() {
+  cd "$pkgname"
+}
+
+package() {
+  cd "$pkgname"
+  install -d "$pkgdir/usr/lib/codeci-backend" "$pkgdir/usr/bin"
+  cp -r backend/app "$pkgdir/usr/lib/codeci-backend/"
+  install -Dm644 backend/requirements.txt "$pkgdir/usr/lib/codeci-backend/requirements.txt"
+  cat > "$pkgdir/usr/bin/codeci-backend" <<'EOF'
+#!/bin/bash
+VENV="/usr/lib/codeci-backend/.venv"
+if [ ! -d "$VENV" ]; then
+  python -m venv "$VENV"
+  "$VENV/bin/pip" install --require-virtualenv -r "/usr/lib/codeci-backend/requirements.txt" --quiet
+fi
+exec "$VENV/bin/python" -m app.main "$@"
+EOF
+  chmod 755 "$pkgdir/usr/bin/codeci-backend"
+  install -Dm644 backend/packaging/codeci-backend.service "$pkgdir/usr/lib/systemd/user/codeci-backend.service"
+}
