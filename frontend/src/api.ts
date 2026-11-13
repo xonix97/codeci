@@ -111,12 +111,12 @@ export async function downloadTrack(track: Track, workDir: string, cookies?: str
 
 export async function getTrending(): Promise<Track[]> {
   try {
-    const url = isTauri ? null : AUDIUS_TRENDING;
-    const json = url
-      ? await (await fetch(url)).json()
-      : ((await invokeCmd<unknown>("audius_trending")) as { data: AudiusTrackRaw[] });
-    const data = (json as { data: AudiusTrackRaw[] }).data ?? [];
-    return data.slice(0, 15).map(audiusToTrack);
+    if (isTauri) {
+      return normalizeTracks(await invokeCmd<Track[]>("audius_trending_tracks", { limit: 15 }));
+    }
+    const r = await fetch(AUDIUS_TRENDING);
+    const json = (await r.json()) as { data: AudiusTrackRaw[] };
+    return json.data.slice(0, 15).map(audiusToTrack);
   } catch {
     return [];
   }
@@ -164,6 +164,15 @@ export async function getHomeRails(): Promise<HomeRails> {
     }
   }
   return { forYou: [], trending, becauseYouPlayed: [], seedTitle: null };
+}
+
+export async function recordPlay(track: Track, completed: boolean): Promise<void> {
+  if (!isTauri) return;
+  try {
+    await invokeCmd("record_play", { track, completed });
+  } catch {
+    /* non-fatal */
+  }
 }
 
 export async function toggleLikeLibrary(track: Track): Promise<void> {

@@ -82,6 +82,47 @@ impl AudiusClient {
             base: "https://api.audius.co/v1".to_string(),
         }
     }
+
+    /// Trending this week (used by the Home rail) — https://api.audius.co/v1/tracks/trending
+    pub async fn trending(&self, limit: u32) -> Result<Vec<Track>> {
+        let url = format!(
+            "{}/tracks/trending?app_name=codeci&limit={}&time=week",
+            self.base,
+            limit.min(50).max(1)
+        );
+        let resp = self.http.get(&url).send().await?.error_for_status()?;
+        let parsed: AudiusSearchResponse = resp.json().await?;
+        Ok(parsed
+            .data
+            .into_iter()
+            .map(|t| {
+                let mut genres = vec![t.genre.clone()];
+                genres.extend(t.tags.unwrap_or_default());
+                Track {
+                    id: format!("audius:{}", t.id),
+                    source: SourceKind::Audius,
+                    source_id: t.id.clone(),
+                    title: t.title,
+                    artist: t.user.name,
+                    album: None,
+                    duration_s: Some(t.duration),
+                    ext: Some("mp3".to_string()),
+                    file_size_bytes: None,
+                    cover_url: t.artwork.and_then(|a| a.big),
+                    stream_url: Some(format!(
+                        "{}/tracks/{}/stream?app_name=codeci",
+                        self.base, t.id
+                    )),
+                    download_url: None,
+                    popularity: Some(t.play_count as f64),
+                    genres,
+                    is_vip: false,
+                    lyric_lrc: None,
+                    license: t.license,
+                }
+            })
+            .collect())
+    }
 }
 
 #[async_trait]

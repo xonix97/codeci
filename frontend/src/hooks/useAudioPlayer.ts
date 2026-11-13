@@ -1,7 +1,7 @@
 // Wires a singleton HTMLAudioElement to the player store.
 import { useEffect } from "react";
 import { selectCurrent, usePlayer } from "../stores/player";
-import { proxyStreamUrl } from "../api";
+import { proxyStreamUrl, recordPlay } from "../api";
 
 const audio = new Audio();
 audio.preload = "auto";
@@ -54,7 +54,12 @@ export function useAudioPlayer() {
   useEffect(() => {
     const onTime = () => setPosition(audio.currentTime);
     const onMeta = () => setDuration(audio.duration || 0);
-    const onEnded = () => next();
+    const onEnded = () => {
+      const state = usePlayer.getState();
+      const cur = selectCurrent(state);
+      if (cur) recordPlay(cur, true);
+      state.next();
+    };
     audio.addEventListener("timeupdate", onTime);
     audio.addEventListener("loadedmetadata", onMeta);
     audio.addEventListener("ended", onEnded);

@@ -270,6 +270,18 @@ impl Library {
 
     // ---- Playlists ----
 
+    pub fn latest_history_track_id(&self) -> Result<Option<i64>> {
+        match self.conn.query_row(
+            "SELECT track_id FROM history ORDER BY played_at DESC, id DESC LIMIT 1",
+            [],
+            |r| r.get(0),
+        ) {
+            Ok(v) => Ok(Some(v)),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(e) => Err(Error::Db(e)),
+        }
+    }
+
     pub fn create_playlist(&self, name: &str, description: Option<&str>) -> Result<i64> {
         self.conn.execute(
             "INSERT INTO playlists (name, description) VALUES (?1, ?2)",
