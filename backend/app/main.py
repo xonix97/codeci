@@ -124,6 +124,75 @@ def sources():
     return {"sources": sorted(MusicClientBuilder.REGISTERED_MODULES)}
 
 
+def _netease_raw_search(type_code: int, query: str, limit: int) -> dict:
+    """Direct NetEase web search API (types: 1=songs, 10=albums, 100=artists, 1009=playlists).
+    Used for artist/album discovery — no download-URL probes, instant answers."""
+    resp = httpx.get(
+        "https://music.163.com/api/search/get",
+        params={"s": query, "type": str(type_code), "limit": str(max(1, min(limit, 30))), "offset": "0"},
+        headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36", "Referer": "https://music.163.com/"},
+        timeout=15,
+    )
+    resp.raise_for_status()
+    return resp.json().get("result", {}) or {}
+
+
+@app.get("/search/artists")
+async def search_artists(q: str, limit: int = 12):
+    import asyncio
+
+    def _load():
+        result = _netease_raw_search(100, q, limit)
+        return [
+            {
+                "id": a.get("id"),
+                "name": a.get("name"),
+                "cover_url": (a.get("img1v1Url") or a.get("picUrl") or "").replace("http://", "https://", 1) or None,
+                "music_size": a.get("musicSize"),
+                "album_size": a.get("albumSize"),
+                "alias": a.get("alias"),
+                "source": "netease",
+            }
+            for a in result.get("artists", [])
+        ]
+
+    if not q.strip():
+        raise HTTPException(status_code=400, detail="q is required")
+    try:
+        artists = await asyncio.get_event_loop().run_in_executor(_pool, _load)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    return {"artists": artists}
+
+
+@app.get("/search/albums")
+async def search_albums(q: str, limit: int = 12):
+    import asyncio
+
+    def _load():
+        result = _netease_raw_search(10, q, limit)
+        return [
+            {
+                "id": a.get("id"),
+                "name": a.get("name"),
+                "cover_url": (a.get("picUrl") or "").replace("http://", "https://", 1) or None,
+                "size": a.get("size"),
+                "publish_time": a.get("publishTime"),
+                "artist": (a.get("artist") or {}).get("name") if isinstance(a.get("artist"), dict) else (a.get("artist") or ", ".join(x.get("name", "") for x in a.get("artists", []))),
+                "source": "netease",
+            }
+            for a in result.get("albums", [])
+        ]
+
+    if not q.strip():
+        raise HTTPException(status_code=400, detail="q is required")
+    try:
+        albums = await asyncio.get_event_loop().run_in_executor(_pool, _load)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    return {"albums": albums}
+
+
 def _make_client(source_slugs: list[str], work_dir: Optional[str] = None, search_size: int = 20):
     slugs = [s.strip() for s in source_slugs if s.strip()]
     cfg = {}

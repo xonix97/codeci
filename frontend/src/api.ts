@@ -1,7 +1,7 @@
 // Typed API layer.
 // Inside Tauri → calls `invoke(...)` (Rust core). In a plain browser (vite dev / screenshots)
 // → falls back to fetch() against VITE_API_BASE (default http://127.0.0.1:8787, the backend).
-import type { HomeRails, Playlist, Track } from "./types";
+import type { Album, Artist, HomeRails, Playlist, Track } from "./types";
 
 const isTauri =
   typeof window !== "undefined" &&
@@ -110,6 +110,85 @@ export async function downloadTrack(track: Track, workDir: string, cookies?: str
 }
 
 /* ---------------- home / recommendations ---------------- */
+
+/** Direct-from-webview Audius user/artist search — instant, keyless. */
+export async function searchAudiusArtists(q: string, limit = 12): Promise<Artist[]> {
+  try {
+    const r = await fetch(
+      `https://api.audius.co/v1/users/search?query=${encodeURIComponent(q)}&app_name=codeci&limit=${limit}`,
+    );
+    if (!r.ok) return [];
+    const json = (await r.json()) as { data?: { id: string; name: string; handle?: string; follower_count?: number; is_verified?: boolean; profile_picture?: { ["150x150"]?: string } }[] };
+    return (json.data ?? []).map((u) => ({
+      id: String(u.id),
+      name: u.name,
+      cover_url: u.profile_picture?.["150x150"] ?? null,
+      followers: u.follower_count ?? null,
+      verified: u.is_verified ?? false,
+      handle: u.handle ?? null,
+      source: "audius",
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/** Direct-from-webview Audius album search (is_album playlists). */
+export async function searchAudiusAlbums(q: string, limit = 12): Promise<Album[]> {
+  try {
+    const r = await fetch(
+      `https://api.audius.co/v1/playlists/search?query=${encodeURIComponent(q)}&app_name=codeci&limit=${limit * 2}`,
+    );
+    if (!r.ok) return [];
+    const json = (await r.json()) as { data?: { id: string; playlist_name?: string; name?: string; is_album: boolean; artist?: { name?: string }; user?: { name?: string }; cover_art_sizes?: string; track_count?: number; upc?: string }[] };
+    return (json.data ?? [])
+      .filter((p) => p.is_album)
+      .slice(0, limit)
+      .map((p) => ({
+        id: String(p.id),
+        name: p.playlist_name ?? p.name ?? "Untitled album",
+        artist: p.artist?.name ?? p.user?.name ?? "Unknown",
+        cover_url: p.cover_art_sizes ? `https://audius.co/image-url?id=${p.cover_art_sizes}&strategy=coverartcustom` : null,
+        size: p.track_count ?? null,
+        source: "audius",
+        is_album: true,
+      }));
+  } catch {
+    return [];
+  }
+}
+
+/** Official NetEase artist discovery (raw web API via sidecar — instant). */
+export async function searchBackendArtists(q: string, limit = 12): Promise<Artist[]> {
+  try {
+    if (isTauri) {
+      const json = await invokeCmd<{ artists: Artist[] }>("search_artists", { query: q, limit });
+      return json.artists;
+    }
+    const r = await fetch(`${API_BASE}/search/artists?q=${encodeURIComponent(q)}&limit=${limit}`);
+    if (!r.ok) return [];
+    const json = (await r.json()) as { artists: Artist[] };
+    return json.artists;
+  } catch {
+    return [];
+  }
+}
+
+/** Official NetEase album discovery (raw web API via sidecar — instant). */
+export async function searchBackendAlbums(q: string, limit = 12): Promise<Album[]> {
+  try {
+    if (isTauri) {
+      const json = await invokeCmd<{ albums: Album[] }>("search_albums", { query: q, limit });
+      return json.albums;
+    }
+    const r = await fetch(`${API_BASE}/search/albums?q=${encodeURIComponent(q)}&limit=${limit}`);
+    if (!r.ok) return [];
+    const json = (await r.json()) as { albums: Album[] };
+    return json.albums;
+  } catch {
+    return [];
+  }
+}
 
 /** Direct-from-webview Audius search — no sidecar, lands in ~2-4 s.
  *  Used for progressive rendering: instant results, official catalogs merged later. */

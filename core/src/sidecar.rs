@@ -164,6 +164,38 @@ impl SidecarClient {
         Ok(resp.json::<LyricsResp>().await?.lyric_lrc)
     }
 
+    /// Official NetEase artist discovery (raw web API — instant, no VIP probes).
+    pub async fn search_artists(&self, query: &str, limit: u32) -> Result<serde_json::Value> {
+        let req = self.http.get(format!(
+            "{}/search/artists?q={}&limit={}",
+            self.base,
+            urlencoding::encode(query),
+            limit.min(30).max(1)
+        ));
+        let resp = self.auth(req).send().await?;
+        if !resp.status().is_success() {
+            let body = resp.text().await.unwrap_or_default();
+            return Err(Error::Sidecar(format!("artist search failed: {body}")));
+        }
+        Ok(resp.json().await?)
+    }
+
+    /// Official NetEase album discovery (raw web API — instant).
+    pub async fn search_albums(&self, query: &str, limit: u32) -> Result<serde_json::Value> {
+        let req = self.http.get(format!(
+            "{}/search/albums?q={}&limit={}",
+            self.base,
+            urlencoding::encode(query),
+            limit.min(30).max(1)
+        ));
+        let resp = self.auth(req).send().await?;
+        if !resp.status().is_success() {
+            let body = resp.text().await.unwrap_or_default();
+            return Err(Error::Sidecar(format!("album search failed: {body}")));
+        }
+        Ok(resp.json().await?)
+    }
+
     /// Download a previously-searched track via musicdl.
     /// `track` is the exact JSON object returned by `search`/`parse_playlist`.
     pub async fn download_track(&self, track: &serde_json::Value, work_dir: &str, cookies: Option<&str>) -> Result<serde_json::Value> {

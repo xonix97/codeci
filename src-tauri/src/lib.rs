@@ -138,6 +138,26 @@ async fn get_lyrics(
 }
 
 #[tauri::command]
+async fn search_artists(
+    query: String,
+    limit: Option<u32>,
+    state: State<'_, AppState>,
+) -> Result<serde_json::Value, String> {
+    let client = state.sidecar.lock().map_err(|e| e.to_string())?.clone();
+    client.search_artists(&query, limit.unwrap_or(12)).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn search_albums(
+    query: String,
+    limit: Option<u32>,
+    state: State<'_, AppState>,
+) -> Result<serde_json::Value, String> {
+    let client = state.sidecar.lock().map_err(|e| e.to_string())?.clone();
+    client.search_albums(&query, limit.unwrap_or(12)).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 async fn parse_playlist(
     url: String,
     source: String,
@@ -289,6 +309,8 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             search,
+            search_artists,
+            search_albums,
             get_lyrics,
             parse_playlist,
             download_track,
@@ -303,3 +325,5 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running codeci");
 }
+
+// touch: respawn dev app with new IPC commands

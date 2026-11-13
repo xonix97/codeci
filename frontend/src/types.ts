@@ -28,6 +28,29 @@ export interface LibraryTrack extends Track {
   local_path?: string | null;
 }
 
+export interface Album {
+  id: string;
+  name: string;
+  artist: string;
+  cover_url?: string | null;
+  size?: number | null;
+  publish_time?: number | null;
+  source: string;
+  is_album?: boolean;
+}
+
+export interface Artist {
+  id: string;
+  name: string;
+  cover_url?: string | null;
+  music_size?: number | null;
+  album_size?: number | null;
+  followers?: number | null;
+  verified?: boolean;
+  handle?: string | null;
+  source: string;
+}
+
 export interface Playlist {
   id: number;
   name: string;
