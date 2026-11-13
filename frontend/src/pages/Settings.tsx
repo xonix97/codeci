@@ -12,7 +12,7 @@ import { ACCENTS_LIQUID, ACCENTS_PIXELOS, useSettings } from "../stores/settings
 const SOURCE_OPTIONS: { slug: string; label: string; note?: string }[] = [
   { slug: "NeteaseMusicClient", label: "NetEase (China)" },
   { slug: "QQMusicClient", label: "QQ Music (China)" },
-  { slug: "KuwoMusicClient", label: "Kuwo (China)" },
+  { slug: "KuwoMusicClient", label: "Kuwo", note: "~40s · verified famous catalog on intl networks" },
   { slug: "MiguMusicClient", label: "Migu (China)" },
   { slug: "QianqianMusicClient", label: "QianQian (China)" },
   { slug: "KugouMusicClient", label: "KuGou (China)" },

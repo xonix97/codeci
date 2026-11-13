@@ -13,6 +13,8 @@ export const API_BASE =
 // Audius public endpoint (no key) for browser-dev trending; in Tauri, prefer core.
 const AUDIUS_TRENDING =
   "https://api.audius.co/v1/tracks/trending?app_name=codeci&limit=15&time=week";
+const AUDIUS_SEARCH = (q: string, limit: number) =>
+  `https://api.audius.co/v1/tracks/search?query=${encodeURIComponent(q)}&app_name=codeci&limit=${limit}`;
 
 async function invokeCmd<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
   const { invoke } = await import("@tauri-apps/api/core");
@@ -21,7 +23,7 @@ async function invokeCmd<T>(cmd: string, args?: Record<string, unknown>): Promis
 
 /* ---------------- sources / search ---------------- */
 
-export const DEFAULT_SOURCES = ["NeteaseMusicClient"];
+export const DEFAULT_SOURCES = ["NeteaseMusicClient", "KuwoMusicClient"];
 
 export const SOURCE_LABEL: Record<string, string> = {
   NeteaseMusicClient: "NetEase",
@@ -108,6 +110,15 @@ export async function downloadTrack(track: Track, workDir: string, cookies?: str
 }
 
 /* ---------------- home / recommendations ---------------- */
+
+/** Direct-from-webview Audius search — no sidecar, lands in ~2-4 s.
+ *  Used for progressive rendering: instant results, official catalogs merged later. */
+export async function searchAudiusDirect(q: string, limit = 12): Promise<Track[]> {
+  const r = await fetch(AUDIUS_SEARCH(q, limit));
+  if (!r.ok) throw new Error(`audius direct search failed: ${r.status}`);
+  const json = (await r.json()) as { data?: AudiusTrackRaw[] };
+  return (json.data ?? []).slice(0, limit).map(audiusToTrack);
+}
 
 export async function getTrending(): Promise<Track[]> {
   try {

@@ -1,6 +1,6 @@
 import { Link2, Loader2, Search as SearchIcon, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { backendSearch, DEFAULT_SOURCES, parsePlaylist, sourceLabel } from "../api";
+import { backendSearch, DEFAULT_SOURCES, parsePlaylist, searchAudiusDirect, sourceLabel } from "../api";
 import { TrackRow } from "../components/TrackRow";
 import { useSettings } from "../stores/settings";
 import type { Track } from "../types";
@@ -11,6 +11,8 @@ export function SearchPage() {
   const [q, setQ] = useState("");
   const [filterSource, setFilterSource] = useState<string | null>(null);
   const [results, setResults] = useState<Track[]>([]);
+  const [fastResults, setFastResults] = useState<Track[]>([]);
+  const [sideLoading, setSideLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [playlistMode, setPlaylistMode] = useState(false);
@@ -19,29 +21,50 @@ export function SearchPage() {
 
   useEffect(() => {
     if (timer.current) window.clearTimeout(timer.current);
-    if (!q.trim() || playlistMode) return;
-    timer.current = window.setTimeout(async () => {
+    if (!q.trim() || playlistMode) {
+      setResults([]);
+      setFastResults([]);
+      setLoading(false);
+      setSideLoading(false);
+      return;
+    }
+    timer.current = window.setTimeout(() => {
       setLoading(true);
+      setSideLoading(true);
       setError(null);
-      try {
-        const sources = filterSource ? [filterSource] : enabled.length ? enabled : DEFAULT_SOURCES;
-        const tracks = await backendSearch(q.trim(), sources, 12);
-        setResults(tracks);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : String(e));
-        setResults([]);
-      } finally {
-        setLoading(false);
-      }
+      setFastResults([]);
+      // Instant rail — direct-from-webview Audius (~2-4 s, no sidecar)
+      searchAudiusDirect(q.trim(), 8)
+        .then(setFastResults)
+        .catch(() => setFastResults([]));
+      // Official catalog via sidecar (~20-45 s) — NetEase / Kuwo
+      const sources = filterSource ? [filterSource] : enabled.length ? enabled : DEFAULT_SOURCES;
+      backendSearch(q.trim(), sources, 12)
+        .then(setResults)
+        .catch((e) => {
+          setError(e instanceof Error ? e.message : String(e));
+          setResults([]);
+        })
+        .finally(() => {
+          setLoading(false);
+          setSideLoading(false);
+        });
     }, 450);
     return () => {
       if (timer.current) window.clearTimeout(timer.current);
     };
   }, [q, filterSource, enabled, playlistMode]);
 
+  const normKey = (s: string) =>
+    s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "");
+  const merged = useMemo(() => {
+    const seen = new Set(results.map((t) => normKey(`${t.title}|${t.artist}`)));
+    const extra = fastResults.filter((t) => !seen.has(normKey(`${t.title}|${t.artist}`)));
+    return [...results, ...extra];
+  }, [results, fastResults]);
   const visible = useMemo(
-    () => (filterSource ? results.filter((t) => t.source === filterSource) : results),
-    [results, filterSource],
+    () => (filterSource ? merged.filter((t) => t.source === filterSource) : merged),
+    [merged, filterSource],
   );
 
   const emptyHint = q.trim()
@@ -106,8 +129,13 @@ export function SearchPage() {
 
           {/* Status line */}
           <div className="h-5 mb-1 px-1 text-[12px]" style={{ color: "var(--text-dim)" }}>
-            {loading ? <span className="inline-flex items-center gap-1.5"><Loader2 size={12} className="animate-spin" /> Searching {enabled.map(sourceLabel).join(", ") || "sources"}…</span>
-              : visible.length > 0 ? `${visible.length} results` : emptyHint}
+            {sideLoading ? (
+              fastResults.length > 0 ? (
+                <span className="inline-flex items-center gap-1.5"><Loader2 size={12} className="animate-spin" /> {fastResults.length} instant matches (Audius) · official catalog from NetEase/Kuwo still loading (~30 s)…</span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5"><Loader2 size={12} className="animate-spin" /> Searching {enabled.map(sourceLabel).join(", ") || "sources"}… (Audius rail usually lands first)</span>
+              )
+            ) : visible.length > 0 ? `${visible.length} results · ${results.length} official + ${visible.length - results.length} Audius` : emptyHint}
           </div>
         </>
       )}
@@ -115,7 +143,7 @@ export function SearchPage() {
       {/* Results */}
       {!playlistMode && (
         <div className="glass p-2">
-          {loading && results.length === 0
+          {loading && results.length === 0 && fastResults.length === 0
             ? Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="track-row">
                   <div className="skeleton h-8" /><div className="skeleton h-11" />

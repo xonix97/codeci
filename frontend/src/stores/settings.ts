@@ -33,7 +33,7 @@ export const useSettings = create<SettingsState>()(
       glass: "medium",
       pixelosDark: false,
       onboardingDone: false,
-      enabledSources: ["NeteaseMusicClient"],
+      enabledSources: ["NeteaseMusicClient", "KuwoMusicClient"],
       jamendoClientId: "",
       downloadDir: "",
       backendUrl: "http://127.0.0.1:8787",
@@ -56,7 +56,7 @@ export const useSettings = create<SettingsState>()(
     }),
     {
       name: "codeci-settings",
-      version: 3,
+      version: 4,
       migrate: (persisted) => {
         // v2: NetEase-only default (Migu is unreachable/slow on intl networks).
         // Factory-default sessions migrate to the fast default; custom source
@@ -64,14 +64,18 @@ export const useSettings = create<SettingsState>()(
         // v3: drop YouTubeMusicClient from persisted enabled lists — it never
         // returns within interactive latency there and leaves the UI on
         // "Searching YouTube…" forever. Re-enable explicitly if you want to wait it out.
+        // v4: upgrade NetEase-only defaults to NetEase + Kuwo (Kuwo verified ~40s
+        // with real famous catalog).
         const state = (persisted ?? {}) as Record<string, unknown>;
         const factoryV1 = ["NeteaseMusicClient", "MiguMusicClient", "QQMusicClient", "KuwoMusicClient"];
         const cur = Array.isArray(state.enabledSources) ? (state.enabledSources as string[]) : null;
         if (!cur || (cur.length === factoryV1.length && factoryV1.every((s) => cur.includes(s)))) {
-          state.enabledSources = ["NeteaseMusicClient"];
+          state.enabledSources = ["NeteaseMusicClient", "KuwoMusicClient"];
+        } else if (cur.length === 1 && cur[0] === "NeteaseMusicClient") {
+          state.enabledSources = ["NeteaseMusicClient", "KuwoMusicClient"];
         } else {
           const filtered = cur.filter((s) => s !== "YouTubeMusicClient");
-          state.enabledSources = filtered.length ? filtered : ["NeteaseMusicClient"];
+          state.enabledSources = filtered.length ? filtered : ["NeteaseMusicClient", "KuwoMusicClient"];
         }
         return state as unknown as SettingsState;
       },
