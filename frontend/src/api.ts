@@ -1,7 +1,7 @@
 // Typed API layer.
 // Inside Tauri → calls `invoke(...)` (Rust core). In a plain browser (vite dev / screenshots)
 // → falls back to fetch() against VITE_API_BASE (default http://127.0.0.1:8787, the backend).
-import type { Album, Artist, HomeRails, Playlist, Track } from "./types";
+import type { Album, Artist, ArtistDetail, HomeRails, Playlist, Track } from "./types";
 
 const isTauri =
   typeof window !== "undefined" &&
@@ -160,6 +160,20 @@ export async function searchAudiusAlbums(q: string, limit = 12): Promise<Album[]
       }));
   } catch {
     return [];
+  }
+}
+
+/** Artist detail + top songs (Spotify-style Popular list). NetEase artists only in v1. */
+export async function getArtistDetail(id: string | number): Promise<ArtistDetail | null> {
+  try {
+    if (isTauri) {
+      return await invokeCmd<ArtistDetail>("artist_detail", { id: Number(id) });
+    }
+    const r = await fetch(`${API_BASE}/artist?id=${encodeURIComponent(String(id))}`);
+    if (!r.ok) return null;
+    return (await r.json()) as ArtistDetail;
+  } catch {
+    return null;
   }
 }
 

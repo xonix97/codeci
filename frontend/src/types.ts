@@ -39,6 +39,22 @@ export interface Album {
   is_album?: boolean;
 }
 
+export interface ArtistDetail {
+  artist: {
+    id: number;
+    name: string;
+    cover_url: string | null;
+    alias?: string[];
+    trans?: string;
+    music_size?: number | null;
+    album_size?: number | null;
+    mv_size?: number | null;
+    brief?: string | null;
+    source: string;
+  };
+  tracks: Track[];
+}
+
 export interface Artist {
   id: string;
   name: string;

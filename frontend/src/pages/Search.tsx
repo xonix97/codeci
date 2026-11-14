@@ -25,7 +25,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "albums", label: "Albums" },
 ];
 
-export function SearchPage() {
+export function SearchPage({ onOpenArtist }: { onOpenArtist?: (a: Artist) => void }) {
   const [q, setQ] = useState("");
   const [tab, setTab] = useState<Tab>("songs");
   const [filterSource, setFilterSource] = useState<string | null>(null);
@@ -242,7 +242,7 @@ export function SearchPage() {
             ) : (
               <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
                 {artists.map((a) => (
-                  <ArtistCard key={`${a.source}:${a.id}:${a.name}`} artist={a} onOpen={(x) => { setTab("songs"); setQ(x.name); }} />
+                  <ArtistCard key={`${a.source}:${a.id}:${a.name}`} artist={a} onOpen={(x) => onOpenArtist?.(x)} />
                 ))}
               </div>
             )

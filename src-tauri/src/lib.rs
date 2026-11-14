@@ -138,6 +138,15 @@ async fn get_lyrics(
 }
 
 #[tauri::command]
+async fn artist_detail(
+    id: i64,
+    state: State<'_, AppState>,
+) -> Result<serde_json::Value, String> {
+    let client = state.sidecar.lock().map_err(|e| e.to_string())?.clone();
+    client.artist_detail(id).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 async fn search_artists(
     query: String,
     limit: Option<u32>,
@@ -308,6 +317,7 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            artist_detail,
             search,
             search_artists,
             search_albums,

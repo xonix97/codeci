@@ -10,11 +10,14 @@ import { PlaylistsPage } from "./pages/Playlists";
 import { DownloadsPage } from "./pages/Downloads";
 import { SettingsPage } from "./pages/Settings";
 import { NowPlayingPage } from "./pages/NowPlaying";
+import { ArtistPage } from "./components/ArtistPage";
 import { useSettings } from "./stores/settings";
+import type { Artist } from "./types";
 
 export default function App() {
   useAudioPlayer();
   const [nav, setNav] = useState<NavTarget>("home");
+  const [artistView, setArtistView] = useState<Artist | null>(null);
   const theme = useSettings((s) => s.theme);
   const accent = useSettings((s) => s.accent);
   const glass = useSettings((s) => s.glass);
@@ -33,7 +36,7 @@ export default function App() {
       case "home":
         return <HomePage onGoSearch={() => setNav("search")} />;
       case "search":
-        return <SearchPage />;
+        return <SearchPage onOpenArtist={(a) => setArtistView(a)} />;
       case "library":
         return <LibraryPage />;
       case "playlists":
@@ -51,7 +54,9 @@ export default function App() {
     <div className="app-frame">
       <div className="aurora" aria-hidden />
       <Sidebar active={nav} onNavigate={setNav} />
-      <main className="main-scroll">{content}</main>
+      <main className="main-scroll">
+        {artistView ? <ArtistPage artist={artistView} onBack={() => setArtistView(null)} /> : content}
+      </main>
       <PlayerBar onNavigate={setNav} />
     </div>
   );

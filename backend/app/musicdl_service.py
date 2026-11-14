@@ -17,6 +17,15 @@ def _client_name_for(source: str) -> str:
     return _SOURCE_CLIENT_NAMES.get(source.lower(), source)
 
 
+def _ne_cover(url: str | None, size: int = 400) -> str | None:
+    """NetEase serves resized thumbs via ?param=WxH — full-size arts are ~2 MB each."""
+    if not url:
+        return None
+    if "music.126.net" in url and "?param=" not in url:
+        return f"{url}?param={size}y{size}"
+    return url.replace("http://", "https://", 1)
+
+
 def song_info_to_track(info: SongInfo, source: str) -> dict[str, Any]:
     raw = getattr(info, "raw_data", {}) or {}
     search = raw.get("search", {}) if isinstance(raw, dict) else {}
@@ -52,7 +61,7 @@ def song_info_to_track(info: SongInfo, source: str) -> dict[str, Any]:
         "duration_s": duration_s,
         "ext": ext,
         "file_size_bytes": file_size_bytes,
-        "cover_url": str(info.cover_url) if info.cover_url else None,
+        "cover_url": _ne_cover(str(info.cover_url) if info.cover_url else None, 400),
         "stream_url": str(info.download_url) if info.download_url else None,
         "download_url": str(info.download_url) if info.download_url else None,
         "popularity": popularity,

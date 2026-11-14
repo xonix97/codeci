@@ -196,6 +196,16 @@ impl SidecarClient {
         Ok(resp.json().await?)
     }
 
+    /// NetEase artist detail (image, catalog stats) + top songs as Track dicts.
+    pub async fn artist_detail(&self, id: i64) -> Result<serde_json::Value> {
+        let req = self.http.get(format!("{}/artist?id={}", self.base, id));
+        let resp = self.auth(req).send().await?;
+        if !resp.status().is_success() {
+            return Err(Error::Sidecar(format!("artist detail failed: {}", resp.status())));
+        }
+        Ok(resp.json().await?)
+    }
+
     /// Download a previously-searched track via musicdl.
     /// `track` is the exact JSON object returned by `search`/`parse_playlist`.
     pub async fn download_track(&self, track: &serde_json::Value, work_dir: &str, cookies: Option<&str>) -> Result<serde_json::Value> {

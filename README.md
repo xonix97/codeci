@@ -31,8 +31,10 @@ The desktop experience (<kbd>Windows</kbd> + <kbd>CachyOS</kbd>) gets the **full
 | Spotify (home + search) | Now Playing — live queue |
 |---|---|
 | ![Search Kanye West on NetEase](docs/screenshots/search-kanye.jpg) | ![Now Playing](docs/screenshots/now-playing-liquid.jpg) |
-| Artists tab | Albums tab |
-| ![Artists](docs/screenshots/artists-tab.jpg) | ![Albums](docs/screenshots/albums-tab.jpg) |
+| Artists tab | Artist page (Kanye West) |
+| ![Artists](docs/screenshots/artists-tab.jpg) | ![Artist page](docs/screenshots/artist-page.jpg) |
+| Albums tab | |
+| ![Albums](docs/screenshots/albums-tab.jpg) | |
 
 | PixelOS Material | Settings — themes |
 |---|---|
@@ -53,7 +55,7 @@ musicdl resolves download URLs + probes them per result, so search is not instan
 ## Search — three tabs, not one pile
 
 - **Songs** — progressive: instant Audius matches land in ~4 s, official NetEase/Kuwo catalog merges in below (mixed correctly, deduped)
-- **Artists** — NetEase artists (avatar, track & album counts; "ye" → Kanye West, 1,736 tracks, 102 albums) + Audius verified artists
+- **Artists** — NetEase artist wall (avatar, track & album counts) + Audius verified artists; click → the full artist page (big hero art, POP·score tagged Popular list, play/shuffle/follow, discography rail)
 - **Albums** — the famous NetEase album wall (The Life of Pablo, MBDTF, The College Dropout, BULLY…) + Audius albums
 - Click any artist/album → jump to its songs in the Songs tab
 

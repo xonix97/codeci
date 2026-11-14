@@ -33,7 +33,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
 
-from .musicdl_service import song_info_to_track
+from .musicdl_service import song_info_to_track, _ne_cover
 
 # Optional fallback for Windows Application Control blocking pycryptodomeX DLLs.
 def _cryptodome_shim() -> None:
@@ -137,6 +137,74 @@ def _netease_raw_search(type_code: int, query: str, limit: int) -> dict:
     return resp.json().get("result", {}) or {}
 
 
+def _netease_raw_get(path: str, params: dict) -> dict:
+    resp = httpx.get(
+        f"https://music.163.com{path}",
+        params=params,
+        headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36", "Referer": "https://music.163.com/"},
+        timeout=20,
+    )
+    resp.raise_for_status()
+    return resp.json()
+
+
+@app.get("/artist")
+async def artist_detail(id: int):
+    """NetEase artist detail + hotSongs, mapped to Track dicts (Spotify-style Popular list)."""
+
+    def _load():
+        return _netease_raw_get(f"/api/artist/{id}", {})
+
+    try:
+        data = await _run(_load)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    artist = data.get("artist") or {}
+    songs = data.get("hotSongs") or []
+
+    def map_song(s: dict) -> dict:
+        al = s.get("album") or {}
+        ar = s.get("artists") or []
+        duration_ms = s.get("duration") or 0
+        duration_s = int(duration_ms) / 1000.0 if duration_ms else None
+        cover = _ne_cover(al.get("picUrl") or (data.get("artist") or {}).get("img1v1Url"), 400)
+        ext = "flac" if s.get("sqMusic") else "mp3"
+        return {
+            "source": "NeteaseMusicClient",
+            "source_id": str(s.get("id")),
+            "title": s.get("name") or "",
+            "artist": ", ".join(a.get("name", "") for a in ar) or artist.get("name", ""),
+            "album": al.get("name"),
+            "duration_s": duration_s,
+            "ext": ext,
+            "file_size_bytes": None,
+            "cover_url": cover,
+            "stream_url": None,
+            "download_url": None,
+            "popularity": s.get("popularity") or s.get("score"),
+            "genres": [],
+            "is_vip": s.get("fee", 0) == 1,
+            "lyric_lrc": None,
+            "with_valid_download_url": s.get("fee", 0) != 1,
+        }
+
+    return {
+        "artist": {
+            "id": artist.get("id", id),
+            "name": artist.get("name") or "Unknown",
+            "cover_url": _ne_cover(artist.get("img1v1Url") or artist.get("picUrl"), 600),
+            "alias": artist.get("alias"),
+            "trans": artist.get("trans"),
+            "music_size": artist.get("musicSize"),
+            "album_size": artist.get("albumSize"),
+            "mv_size": artist.get("mvSize"),
+            "brief": artist.get("briefDesc") or None,
+            "source": "netease",
+        },
+        "tracks": [map_song(s) for s in songs],
+    }
+
+
 @app.get("/search/artists")
 async def search_artists(q: str, limit: int = 12):
     import asyncio
@@ -147,7 +215,7 @@ async def search_artists(q: str, limit: int = 12):
             {
                 "id": a.get("id"),
                 "name": a.get("name"),
-                "cover_url": (a.get("img1v1Url") or a.get("picUrl") or "").replace("http://", "https://", 1) or None,
+                "cover_url": _ne_cover(a.get("img1v1Url") or a.get("picUrl"), 400),
                 "music_size": a.get("musicSize"),
                 "album_size": a.get("albumSize"),
                 "alias": a.get("alias"),
@@ -175,7 +243,7 @@ async def search_albums(q: str, limit: int = 12):
             {
                 "id": a.get("id"),
                 "name": a.get("name"),
-                "cover_url": (a.get("picUrl") or "").replace("http://", "https://", 1) or None,
+                "cover_url": _ne_cover(a.get("picUrl"), 500),
                 "size": a.get("size"),
                 "publish_time": a.get("publishTime"),
                 "artist": (a.get("artist") or {}).get("name") if isinstance(a.get("artist"), dict) else (a.get("artist") or ", ".join(x.get("name", "") for x in a.get("artists", []))),
